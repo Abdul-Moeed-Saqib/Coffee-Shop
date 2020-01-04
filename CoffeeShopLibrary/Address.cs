@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace CoffeeShopLibrary
 {
+    [Serializable]
     public struct Address
     {
         private string streetName;

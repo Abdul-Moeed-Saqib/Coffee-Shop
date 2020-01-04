@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace CoffeeShopLibrary
 {
+    [Serializable]
     public class Order
     {
-        private int id;
+        private static uint idInc;
+        private uint id;
         private Customer customer;
         private DateTime orderTime;
         private DateTime deliveryTime;
@@ -16,10 +18,10 @@ namespace CoffeeShopLibrary
         private decimal cost;
         private OrderType orderType;
         private List<OrderItem> orderItems;
-        private int noOfItems;
         private bool isDelivered;
 
-        public int ID { get { return id; } set { id = value; } }
+        public uint ID { get { return id; } set { id = value; } }
+        public string Name { get; }
         public Customer Customer { get { return customer; } set { if (customer != null) { Console.WriteLine("Something went wrong! Customer cannot be changed once assigned."); } else { customer = value; } } }
         public DateTime OrderTime { get { return orderTime; } set { orderTime = value; } }
         public DateTime DeliveryTime { get { return deliveryTime; } set { deliveryTime = value; } }
@@ -27,30 +29,33 @@ namespace CoffeeShopLibrary
         public decimal Cost { get { return cost; } set { cost = value; } }
         public OrderType OrderType { get { return orderType; } set { orderType = value; } }
         public List<OrderItem> OrderItems { get { return orderItems; } set { orderItems = value; } }
-        public bool IsDelivered { get { return IsDelivered; } set { isDelivered = value; } }
+        public bool IsDelivered { get { return IsDelivered; } set { isDelivered = value; if (isDelivered == true) { DeliveryTime = DateTime.Now; } else { DeliveryTime = DateTime.MinValue; } } }
 
         public Order()
         {
-            id++;
+            idInc++;
+            id = idInc;
             orderItems = new List<OrderItem>();
         }
 
-        public void AddOrderItem(OrderItem newItem)
+        public Order(Address deliveryAddress)
         {
-            orderItems[noOfItems++] = newItem;
-            cost += newItem.MenuItem.BaseCost;
+            idInc++;
+            id = idInc;
+            DeliveryAddress = deliveryAddress;
+            orderItems = new List<OrderItem>();
+        }
+
+        public void AddOrderItem(MenuItem newItem)
+        {
+            OrderItem item = new OrderItem(newItem);
+            orderItems.Add(item);
+            cost += newItem.BaseCost;
         }
 
         public void Deliver()
         {
-            if (isDelivered == true)
-            {
-                deliveryTime = DateTime.Now; 
-            }
-            else
-            {
-                deliveryTime = DateTime.MinValue;
-            }
+            IsDelivered = true;
         }
 
         public void Delivered()
@@ -67,11 +72,37 @@ namespace CoffeeShopLibrary
 
         public string GetInfo()
         {
-            string result = $"Order ID: {id}\nCustomer: {customer.Name}\n Order Time: {orderTime}\n Delivery Date: {deliveryTime}\n Delivery Address: {deliveryAddress.GetInfo()}\n Cost: {cost:C}\n" +
-                $"Order Type: {(orderType.Equals(0) ? "Phone Order" : "Resturant Order")}";
-            foreach (OrderItem item in orderItems)
+            string result = $"\t\nOrder ID: {id}\n Order Time: {orderTime.ToShortTimeString()}\n Delivery Date: {deliveryTime.ToShortTimeString()}\n Delivery Address: {deliveryAddress.GetInfo()}\n Cost: {cost:C}\n";
+            result += "Order Type: ";
+            if (orderType.Equals(OrderType.PHONE_ORDER)) 
             {
-                result += $"Orders: {item.GetInfo()}\n";
+                result += "Phone Order";
+            }
+            else
+            {
+                result += "Resturant Order";
+            }
+
+            if (isDelivered)
+            {
+                result += $"\n Delivery Time: {DeliveryTime}\n";
+            }
+            else
+            {
+                result += "\nNOT DELIVERED!\n";
+            }
+
+            result += "\t\tItems: \n";
+
+            if (orderItems != null)
+            {
+                foreach (OrderItem item in orderItems)
+                {
+                    if (item != null)
+                    {
+                        result += $"\t\t{item.GetInfo()}\n";
+                    }
+                }
             }
             return result;
         }

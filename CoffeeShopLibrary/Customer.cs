@@ -6,16 +6,17 @@ using System.Threading.Tasks;
 
 namespace CoffeeShopLibrary
 {
+    [Serializable]
     public class Customer
     {
-        private int id;
+        private static uint idInc;
+        private uint id;
         private string name;
         private Address address;
         private uint phoneNumber;
         private List<Order> orders;
-        private int noOfOrder;
 
-        public int ID { get { return id; } set { id = value; } }
+        public uint ID { get { return id; } set { id = value; } }
         public string Name { get { return name; } set { name = value; } }
         public Address Address { get { return address; } set { address = value; } }
         public uint PhoneNumber { get { return phoneNumber; } set { phoneNumber = value; } }
@@ -23,13 +24,15 @@ namespace CoffeeShopLibrary
 
         public Customer()
         {
-            id++;
+            id = 1;
+            idInc = 1;
             orders = new List<Order>();
         }
 
         public Customer(string name, Address address, uint phoneNumber)
         {
-            id++;
+            idInc++;
+            id = idInc;
             orders = new List<Order>();
             this.name = name;
             this.address = address;
@@ -38,9 +41,10 @@ namespace CoffeeShopLibrary
 
         public Order CreatePhoneOrder(Address address, OrderType type)
         {
-            Order order = new Order();
+            Order order = new Order(address);
             if (type.Equals(OrderType.PHONE_ORDER))
             {
+                order.OrderType = type;
                 orders.Add(order);
             }
             return order;
@@ -52,12 +56,20 @@ namespace CoffeeShopLibrary
             return newOrder;
         }
 
-        public string GetInfo()
+        public override string ToString()
         {
-            string result = $"ID: {id}\nName: {name}\n Address: {address.GetInfo()}\n Phone Number: {phoneNumber}\n";
-            foreach (Order order in orders)
+            string result = $"\t\nID: {id}\nName: {name}\n \tAddress: {address.GetInfo()}\n Phone Number: {phoneNumber}\n";
+            if (orders != null)
             {
-                result += $"Orders: {order.GetInfo()}";
+                result += "\nOrders: \n";
+
+                foreach (Order order in orders)
+                {
+                    if (order != null)
+                    {
+                        result += $"{order.GetInfo()}";
+                    }
+                }
             }
             return result;
         }
